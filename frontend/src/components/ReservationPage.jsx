@@ -70,20 +70,21 @@ function ReservationPage({ searchData, onBack, onNavigate }) {
       const { data } = await api.post('/reservations', reservationPayload);
       
       if (data.success) {
-        // Envoi d'un email de notification (Optionnel mais demandé)
+        // Envoi d'un email de notification
         try {
-          await fetch("https://formsubmit.co/ajax/mcharki697@gmail.com", {
+          await fetch("https://formsubmit.co/ajax/okfmohammed9@gmail.com", {
             method: "POST",
             headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
             body: JSON.stringify({
-              Type: "Nouvelle Réservation (Base de données)",
-              Client: form.fullName,
-              Email: form.email,
-              Vehicule: selectedCar.name,
-              Depart: form.pickupDate,
-              Retour: form.returnDate,
-              Lieu: form.pickupLocation,
-              Notes: form.notes
+              "_captcha": "false",
+              "Type": "Nouvelle Réservation (Base de données)",
+              "Client": form.fullName,
+              "Email": form.email,
+              "Vehicule": selectedCar.name,
+              "Depart": form.pickupDate,
+              "Retour": form.returnDate,
+              "Lieu": form.pickupLocation,
+              "Notes": form.notes
             })
           });
         } catch (emailErr) {

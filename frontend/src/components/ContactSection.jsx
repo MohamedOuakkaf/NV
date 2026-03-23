@@ -24,7 +24,7 @@ function ContactSection() {
     }
   };
 
-  const handleContactSubmit = (e) => {
+  const handleContactSubmit = async (e) => {
     e.preventDefault();
     
     // Validation
@@ -45,16 +45,35 @@ function ContactSection() {
 
     // Submit Action
     setIsSubmitting(true);
+    
+    try {
+      await fetch("https://formsubmit.co/ajax/okfmohammed9@gmail.com", {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          "_captcha": "false",
+          "Type de notification": "Nouveau Message de Contact - LUXCAR",
+          "Nom du client": contactForm.name,
+          "Email": contactForm.email,
+          "Téléphone": contactForm.phone,
+          "Message": contactForm.message
+        })
+      });
+    } catch (err) {
+      console.error("Erreur lors de l'envoi de l'email :", err);
+    }
+
+    setIsSubmitting(false);
+    setIsSuccess(true);
+    setContactForm({ name: '', email: '', phone: '', message: '' });
+    
+    // Reset success message after 5 seconds
     setTimeout(() => {
-      setIsSubmitting(false);
-      setIsSuccess(true);
-      setContactForm({ name: '', email: '', phone: '', message: '' });
-      
-      // Reset success message after 5 seconds
-      setTimeout(() => {
-        setIsSuccess(false);
-      }, 5000);
-    }, 1500);
+      setIsSuccess(false);
+    }, 5000);
   };
 
   return (
@@ -205,7 +224,7 @@ function ContactSection() {
               </div>
               <div>
                 <h3 className="text-xl font-bold mb-1 text-white">Adresse</h3>
-                <p className="text-gray-400 text-base leading-relaxed">Avenue Mohammed V<br />Casablanca, 20000, Maroc</p>
+                <p className="text-gray-400 text-base leading-relaxed">2X4M+JVG, Ain Chqef<br />30050, Maroc</p>
               </div>
             </div>
 
@@ -225,12 +244,12 @@ function ContactSection() {
         {/* Google Maps iframe */}
         <div className="mt-20 rounded-2xl overflow-hidden h-[400px] shadow-2xl border border-gray-800 relative group">
           <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 pointer-events-none flex items-center justify-center">
-            <span className="bg-red-600 text-white font-bold py-2 px-6 rounded-full shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">Notre emplacement à Casablanca</span>
+            <span className="bg-red-600 text-white font-bold py-2 px-6 rounded-full shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">Notre agence</span>
           </div>
           <iframe 
-            title="Google Maps Location Casablanca"
+            title="Google Maps Location"
             className="w-full h-full border-0 grayscale hover:grayscale-0 transition-all duration-700"
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d106376.56000676674!2d-7.669394!3d33.5731104!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xda7cd4778aa113b%3A0xb06c1d84f310fd3!2sCasablanca%2C%20Morocco!5e0!3m2!1sen!2sus!4v1700000000000!5m2!1sen!2sus" 
+            src="https://www.google.com/maps?q=2X4M%2BJVG,+Ain+Chqef+30050&output=embed" 
             allowFullScreen="" 
             loading="lazy" 
             referrerPolicy="no-referrer-when-downgrade"
