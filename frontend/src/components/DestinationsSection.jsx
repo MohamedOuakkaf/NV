@@ -24,6 +24,7 @@ function DestinationsSection() {
     },
     {
       //ddsd
+      //EEED
       name: 'Fès',
       desc: 'Capitale spirituelle du royaume, réputée pour sa medina millénaire et la majestueuse porte Bab Boujloud.',
       image: 'https://www.lavieeco.com/wp-content/uploads/2021/11/P20-2-2048x1479.jpg'
