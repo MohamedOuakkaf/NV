@@ -1,4 +1,5 @@
 const Car = require('../models/Car');
+const Reservation = require('../models/Reservation');
 const path = require('path');
 const fs = require('fs');
 
@@ -15,6 +16,8 @@ const getCars = async (req, res) => {
     const filter = {};
     if (req.query.availability !== undefined) {
       filter.availability = req.query.availability === 'true';
+    } else if (req.query.all !== 'true') {
+      filter.availability = true;
     }
     if (req.query.brand) {
       filter.brand = { $regex: req.query.brand, $options: 'i' };
@@ -32,6 +35,25 @@ const getCars = async (req, res) => {
         { name: { $regex: req.query.search, $options: 'i' } },
         { brand: { $regex: req.query.search, $options: 'i' } },
       ];
+    }
+
+    // Exclusion des véhicules ayant des réservations en conflit sur les dates demandées
+    if (req.query.startDate && req.query.endDate) {
+      const start = new Date(req.query.startDate);
+      const end = new Date(req.query.endDate);
+      
+      const conflictingReservations = await Reservation.find({
+        status: { $in: ['en_attente', 'confirmée'] },
+        $or: [
+          // Conflit si la réservation existante chevauche la période demandée
+          { startDate: { $lte: end }, endDate: { $gte: start } }
+        ]
+      });
+      
+      const conflictingCarIds = conflictingReservations.map(r => r.car);
+      if (conflictingCarIds.length > 0) {
+        filter._id = { $nin: conflictingCarIds };
+      }
     }
 
     // Tri

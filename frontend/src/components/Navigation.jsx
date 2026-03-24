@@ -21,6 +21,23 @@ function Navigation({ onReserve, onNavigate }) {
     { href: '#contact', label: 'Contact' },
   ];
 
+  const handleNavClick = (e, href) => {
+    e.preventDefault();
+    if (href.startsWith('#')) {
+      onNavigate('home');
+      setTimeout(() => {
+        const element = document.querySelector(href);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        } else {
+          window.location.hash = href;
+        }
+      }, 100); // Wait for React to mount the Home view
+    } else {
+      window.location.href = href;
+    }
+  };
+
   return (
     <nav className="fixed top-0 left-0 right-0 bg-gray-900/95 backdrop-blur-md z-50 border-b border-red-500/20">
       <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
@@ -31,7 +48,12 @@ function Navigation({ onReserve, onNavigate }) {
         {/* Desktop Menu */}
         <div className="hidden md:flex gap-6 items-center">
           {navLinks.map(({ href, label }) => (
-            <a key={href} href={href} className="text-gray-300 hover:text-white transition text-sm font-medium">
+            <a 
+              key={href} 
+              href={href} 
+              onClick={(e) => handleNavClick(e, href)}
+              className="text-gray-300 hover:text-white transition text-sm font-medium"
+            >
               {label}
             </a>
           ))}
@@ -105,7 +127,15 @@ function Navigation({ onReserve, onNavigate }) {
         <div className="md:hidden bg-gray-800 border-t border-red-500/20 animate-fade-in-up">
           <div className="flex flex-col gap-1 p-4">
             {navLinks.map(({ href, label }) => (
-              <a key={href} href={href} onClick={() => setMobileMenuOpen(false)} className="text-gray-300 hover:text-white text-sm py-2 px-3 rounded hover:bg-gray-700 transition">
+              <a 
+                key={href} 
+                href={href} 
+                onClick={(e) => {
+                  setMobileMenuOpen(false);
+                  handleNavClick(e, href);
+                }} 
+                className="text-gray-300 hover:text-white text-sm py-2 px-3 rounded hover:bg-gray-700 transition"
+              >
                 {label}
               </a>
             ))}

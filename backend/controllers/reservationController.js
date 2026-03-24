@@ -56,9 +56,6 @@ const createReservation = async (req, res) => {
       notes,
     });
 
-    // Marquer la voiture comme indisponible
-    await Car.findByIdAndUpdate(carId, { availability: false });
-
     await reservation.populate(['user', 'car']);
 
     res.status(201).json({

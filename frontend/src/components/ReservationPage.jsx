@@ -3,6 +3,8 @@ import { Calendar, User as UserIcon, Mail, Phone, MapPin, CheckCircle, Car as Ca
 import { useAuth } from '../context/AuthContext';
 import api from '../config/api';
 
+const DEFAULT_CITIES = ['Casablanca', 'Marrakech', 'Rabat', 'Tanger', 'Fès', 'Meknès'];
+
 function ReservationPage({ searchData, onBack, onNavigate }) {
   const { user } = useAuth();
   const [selectedCar, setSelectedCar] = useState(null);
@@ -12,17 +14,49 @@ function ReservationPage({ searchData, onBack, onNavigate }) {
     fullName: user?.name || '',
     email: user?.email || '',
     phone: user?.phone || '',
-    pickupLocation: searchData?.city || 'Casablanca',
-    returnLocation: searchData?.city || 'Casablanca',
+    pickupLocation: DEFAULT_CITIES[0],
+    returnLocation: DEFAULT_CITIES[0],
     pickupDate: searchData?.pickupDate || '',
     returnDate: searchData?.returnDate || '',
     notes: ''
   });
+  const [availableCities, setAvailableCities] = useState(DEFAULT_CITIES);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
 
+  useEffect(() => {
+    // Update form when user context changes
+    if (user && !form.fullName) {
+      setForm(prev => ({
+        ...prev,
+        fullName: user.name || '',
+        email: user.email || ''
+      }));
+    }
+  }, [user]);
+
+  useEffect(() => {
+    const fetchCities = async () => {
+      try {
+        const { data } = await api.get('/destinations');
+        if (data.destinations && data.destinations.length > 0) {
+          const names = data.destinations.map(d => d.name);
+          setAvailableCities(names);
+          setForm(prev => ({
+            ...prev,
+            pickupLocation: searchData?.city && names.includes(searchData.city) ? searchData.city : names[0],
+            returnLocation: searchData?.city && names.includes(searchData.city) ? searchData.city : names[0]
+          }));
+        }
+      } catch (e) {
+        console.error('Erreur chargement villes:', e);
+      }
+    };
+    fetchCities();
+  }, [searchData]);
+  
   // Fetch the selected car details from backend
   useEffect(() => {
     const fetchCar = async () => {
@@ -263,29 +297,35 @@ function ReservationPage({ searchData, onBack, onNavigate }) {
                   <div>
                     <label className="block text-sm font-medium text-gray-400 mb-2">Ville de départ *</label>
                     <div className="relative">
-                      <input
-                        type="text"
+                      <select
                         name="pickupLocation"
                         value={form.pickupLocation}
                         onChange={handleChange}
                         required
-                        className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-red-500 text-white transition-all"
-                      />
-                      <MapPin className="absolute left-3 top-3.5 text-red-500 w-5 h-5" />
+                        className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-red-500 text-white transition-all appearance-none"
+                      >
+                        {availableCities.map(city => (
+                          <option key={city} value={city}>{city}</option>
+                        ))}
+                      </select>
+                      <MapPin className="absolute left-3 top-3.5 text-red-500 w-5 h-5 pointer-events-none" />
                     </div>
                   </div>
                    <div>
                     <label className="block text-sm font-medium text-gray-400 mb-2">Ville de retour *</label>
                     <div className="relative">
-                      <input
-                        type="text"
+                      <select
                         name="returnLocation"
                         value={form.returnLocation}
                         onChange={handleChange}
                         required
-                        className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-red-500 text-white transition-all"
-                      />
-                      <MapPin className="absolute left-3 top-3.5 text-red-500 w-5 h-5" />
+                        className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-red-500 text-white transition-all appearance-none"
+                      >
+                        {availableCities.map(city => (
+                          <option key={city} value={city}>{city}</option>
+                        ))}
+                      </select>
+                      <MapPin className="absolute left-3 top-3.5 text-red-500 w-5 h-5 pointer-events-none" />
                     </div>
                   </div>
                   <div>

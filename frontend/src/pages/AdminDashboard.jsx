@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   LayoutDashboard, Car, Calendar, Users, Plus, Trash2, Check, X,
-  Clock, TrendingUp, AlertCircle, LogOut, ChevronDown, Upload, RefreshCw
+  Clock, TrendingUp, AlertCircle, LogOut, ChevronDown, Upload, RefreshCw,
+  MapPin, Edit2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../config/api';
@@ -10,6 +11,7 @@ const TABS = [
   { id: 'stats', label: 'Tableau de bord', icon: LayoutDashboard },
   { id: 'reservations', label: 'Réservations', icon: Calendar },
   { id: 'cars', label: 'Voitures', icon: Car },
+  { id: 'destinations', label: 'Destinations', icon: MapPin },
 ];
 
 const STATUS_LABELS = {
@@ -193,13 +195,14 @@ function CarsTab() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: '', brand: '', price: '', category: 'berline', fuel: 'essence', transmission: 'manuelle', seats: 5, image: '' });
+  const [editId, setEditId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(null);
 
   const fetchCars = useCallback(async () => {
     setLoading(true);
     try {
-      const { data } = await api.get('/cars');
+      const { data } = await api.get('/cars?all=true&limit=1000');
       setCars(data.cars || []);
     } catch (e) {
       console.error(e);
@@ -210,11 +213,20 @@ function CarsTab() {
 
   useEffect(() => { fetchCars(); }, [fetchCars]);
 
+  const handleToggleAvailability = async (id, currentStatus) => {
+    try {
+      await api.put(`/cars/${id}`, { availability: !currentStatus });
+      fetchCars();
+    } catch (e) {
+      alert(e.response?.data?.message || 'Erreur lors de la mise à jour de la disponibilité.');
+    }
+  };
+
   const handleAddCar = async (e) => {
     e.preventDefault();
     setSaving(true);
     try {
-      await api.post('/cars', {
+      const payload = {
         name: form.name,
         brand: form.brand,
         price: Number(form.price),
@@ -223,12 +235,20 @@ function CarsTab() {
         transmission: form.transmission,
         seats: Number(form.seats),
         image: form.image,
-      });
+      };
+
+      if (editId) {
+        await api.put(`/cars/${editId}`, payload);
+      } else {
+        await api.post('/cars', payload);
+      }
+      
       setShowForm(false);
+      setEditId(null);
       setForm({ name: '', brand: '', price: '', category: 'berline', fuel: 'essence', transmission: 'manuelle', seats: 5, image: '' });
       fetchCars();
     } catch (e) {
-      alert(e.response?.data?.message || 'Erreur lors de l\'ajout.');
+      alert(e.response?.data?.message || 'Erreur lors de l\'enregistrement.');
     } finally {
       setSaving(false);
     }
@@ -252,7 +272,7 @@ function CarsTab() {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-white font-playfair">Gestion des Voitures</h2>
         <button
-          onClick={() => setShowForm(!showForm)}
+          onClick={() => { setShowForm(!showForm); setEditId(null); setForm({ name: '', brand: '', price: '', category: 'berline', fuel: 'essence', transmission: 'manuelle', seats: 5, image: '' }); }}
           className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded-lg transition"
         >
           <Plus size={18} /> Ajouter une voiture
@@ -262,7 +282,7 @@ function CarsTab() {
       {/* Add Form */}
       {showForm && (
         <form onSubmit={handleAddCar} className="bg-gray-750 border border-gray-700 rounded-xl p-6 mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <h3 className="md:col-span-2 text-lg font-bold text-white mb-1">Nouvelle voiture</h3>
+          <h3 className="md:col-span-2 text-lg font-bold text-white mb-1">{editId ? 'Modifier la voiture' : 'Nouvelle voiture'}</h3>
           {[
             { name: 'name', label: 'Nom *', placeholder: 'ex: Clio 5' },
             { name: 'brand', label: 'Marque *', placeholder: 'ex: Renault' },
@@ -302,9 +322,9 @@ function CarsTab() {
           </div>
           <div className="md:col-span-2 flex gap-3 pt-2">
             <button type="submit" disabled={saving} className="flex-1 bg-red-500 hover:bg-red-600 disabled:opacity-60 text-white font-bold py-2.5 rounded-lg transition flex items-center justify-center gap-2">
-              {saving ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <><Plus size={16} /> Ajouter</>}
+              {saving ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <><Plus size={16} /> {editId ? 'Enregistrer' : 'Ajouter'}</>}
             </button>
-            <button type="button" onClick={() => setShowForm(false)} className="flex-1 bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2.5 rounded-lg transition">
+            <button type="button" onClick={() => { setShowForm(false); setEditId(null); setForm({ name: '', brand: '', price: '', category: 'berline', fuel: 'essence', transmission: 'manuelle', seats: 5, image: '' }); }} className="flex-1 bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2.5 rounded-lg transition">
               Annuler
             </button>
           </div>
@@ -338,13 +358,182 @@ function CarsTab() {
                 </div>
                 <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-700">
                   <span className="text-xs text-gray-500">{car.fuel} · {car.transmission} · {car.seats} places</span>
-                  <button
-                    onClick={() => handleDelete(car._id)}
-                    disabled={deleting === car._id}
-                    className="flex items-center gap-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 px-2 py-1 rounded-lg transition text-xs disabled:opacity-50"
-                  >
-                    {deleting === car._id ? <div className="w-3 h-3 border-2 border-red-400 border-t-transparent rounded-full animate-spin" /> : <Trash2 size={14} />}
-                    Supprimer
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        setForm({
+                          name: car.name, brand: car.brand, price: car.price,
+                          category: car.category, fuel: car.fuel, transmission: car.transmission,
+                          seats: car.seats, image: car.image || ''
+                        });
+                        setEditId(car._id);
+                        setShowForm(true);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className="flex items-center gap-1 text-green-400 hover:text-green-300 hover:bg-green-500/10 px-2 py-1 rounded-lg transition text-xs border border-green-500/30"
+                    >
+                      <Edit2 size={14} /> Modifier
+                    </button>
+                    <button
+                      onClick={() => handleToggleAvailability(car._id, car.availability)}
+                      className="flex items-center gap-1 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 px-2 py-1 rounded-lg transition text-xs border border-blue-500/30"
+                    >
+                      {car.availability ? 'Désactiver' : 'Activer'}
+                    </button>
+                    <button
+                      onClick={() => handleDelete(car._id)}
+                      disabled={deleting === car._id}
+                      className="flex items-center gap-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 px-2 py-1 rounded-lg transition text-xs disabled:opacity-50"
+                    >
+                      {deleting === car._id ? <div className="w-3 h-3 border-2 border-red-400 border-t-transparent rounded-full animate-spin" /> : <Trash2 size={14} />}
+                      Supprimer
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Destinations Tab ────────────────────────────────────────────────────────
+function DestinationsTab() {
+  const [destinations, setDestinations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ name: '', desc: '', image: '', isActive: true });
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(null);
+  const [editId, setEditId] = useState(null);
+
+  const fetchDestinations = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data } = await api.get('/destinations?all=true');
+      setDestinations(data.destinations || []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchDestinations(); }, [fetchDestinations]);
+
+  const handleToggleActive = async (id, currentStatus) => {
+    try {
+      await api.put(`/destinations/${id}`, { isActive: !currentStatus });
+      fetchDestinations();
+    } catch (e) {
+      alert('Erreur lors de la mise à jour.');
+    }
+  };
+
+  const handleAddDestination = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      if (editId) {
+        await api.put(`/destinations/${editId}`, form);
+      } else {
+        await api.post('/destinations', form);
+      }
+      setShowForm(false);
+      setEditId(null);
+      setForm({ name: '', desc: '', image: '', isActive: true });
+      fetchDestinations();
+    } catch (e) {
+      alert(e.response?.data?.message || `Erreur lors de l'enregistrement.`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!confirm('Confirmer la suppression de cette destination ?')) return;
+    setDeleting(id);
+    try {
+      await api.delete(`/destinations/${id}`);
+      fetchDestinations();
+    } catch (e) {
+      alert('Erreur lors de la suppression.');
+    } finally {
+      setDeleting(null);
+    }
+  };
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-white font-playfair">Gestion des Destinations</h2>
+        <button
+          onClick={() => { setShowForm(!showForm); setEditId(null); setForm({ name: '', desc: '', image: '', isActive: true }); }}
+          className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded-lg transition"
+        >
+          <Plus size={18} /> Ajouter
+        </button>
+      </div>
+
+      {showForm && (
+        <form onSubmit={handleAddDestination} className="bg-gray-750 border border-gray-700 rounded-xl p-6 mb-6 grid grid-cols-1 gap-4">
+          <h3 className="text-lg font-bold text-white mb-1">{editId ? 'Modifier la destination' : 'Nouvelle destination'}</h3>
+          
+          <div>
+            <label className="block text-xs font-medium text-gray-400 mb-1">Nom de la ville *</label>
+            <input type="text" name="name" value={form.name} onChange={(e) => setForm({...form, name: e.target.value})} required className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white" placeholder="ex: Tanger" />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-400 mb-1">Description courte *</label>
+            <textarea name="desc" value={form.desc} onChange={(e) => setForm({...form, desc: e.target.value})} required className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white h-20" placeholder="Description attractive..." />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-400 mb-1">URL de l'image *</label>
+            <input type="url" name="image" value={form.image} onChange={(e) => setForm({...form, image: e.target.value})} required className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white" placeholder="https://..." />
+            {form.image && (
+              <div className="mt-3 h-32 rounded-lg overflow-hidden border border-gray-600">
+                <img src={form.image} alt="Aperçu" className="w-full h-full object-cover" onError={(e) => e.target.style.display = 'none'} />
+              </div>
+            )}
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <button type="submit" disabled={saving} className="flex-1 bg-red-500 hover:bg-red-600 disabled:opacity-60 text-white font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 transition">
+              {saving ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <><Check size={16} /> Enregistrer</>}
+            </button>
+            <button type="button" onClick={() => setShowForm(false)} className="flex-1 bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2.5 rounded-lg transition">
+              Annuler
+            </button>
+          </div>
+        </form>
+      )}
+
+      {loading ? (
+        <div className="flex justify-center py-20"><div className="w-10 h-10 border-4 border-red-500 border-t-transparent rounded-full animate-spin" /></div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {destinations.map(dest => (
+            <div key={dest._id} className="bg-gray-750 border border-gray-700 rounded-xl overflow-hidden hover:border-gray-600 transition flex items-center">
+              <div className="w-32 h-32 shrink-0 bg-gray-800 relative">
+                 <img src={dest.image} alt={dest.name} className="w-full h-full object-cover" />
+                 <div className={`absolute top-0 bottom-0 left-0 w-1 ${dest.isActive ? 'bg-green-500' : 'bg-red-500'}`}></div>
+              </div>
+              <div className="p-4 flex-1">
+                <h3 className="font-bold text-white text-lg">{dest.name}</h3>
+                <p className="text-gray-400 text-xs mt-1 line-clamp-2">{dest.desc}</p>
+                <div className="flex gap-2 mt-3">
+                  <button onClick={() => { setForm({ name: dest.name, desc: dest.desc, image: dest.image, isActive: dest.isActive }); setEditId(dest._id); setShowForm(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="text-xs text-green-400 hover:bg-green-500/10 px-2 py-1 rounded border border-green-500/30 flex items-center gap-1 transition">
+                    <Edit2 size={12} /> Modifier
+                  </button>
+                  <button onClick={() => handleToggleActive(dest._id, dest.isActive)} className="text-xs text-blue-400 hover:bg-blue-500/10 px-2 py-1 rounded border border-blue-500/30 transition">
+                    {dest.isActive ? 'Désact.' : 'Activer'}
+                  </button>
+                  <button disabled={deleting === dest._id} onClick={() => handleDelete(dest._id)} className="text-xs text-red-400 hover:bg-red-500/10 px-2 py-1 rounded disabled:opacity-50 transition border border-transparent">
+                    <Trash2 size={12} />
                   </button>
                 </div>
               </div>
@@ -437,6 +626,7 @@ function AdminDashboard({ onNavigate }) {
           {activeTab === 'stats' && <StatsTab />}
           {activeTab === 'reservations' && <ReservationsTab />}
           {activeTab === 'cars' && <CarsTab />}
+          {activeTab === 'destinations' && <DestinationsTab />}
         </div>
       </main>
     </div>

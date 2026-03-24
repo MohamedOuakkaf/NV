@@ -28,6 +28,7 @@ app.use('/api/auth',         require('./routes/authRoutes'));
 app.use('/api/users',        require('./routes/userRoutes'));
 app.use('/api/cars',         require('./routes/carRoutes'));
 app.use('/api/reservations', require('./routes/reservationRoutes'));
+app.use('/api/destinations', require('./routes/destinationRoutes'));
 
 // Route racine
 app.get('/', (req, res) => {

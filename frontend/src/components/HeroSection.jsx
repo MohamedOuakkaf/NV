@@ -10,28 +10,61 @@ const backgroundImages = [
 ];
 
 import { Calendar, Car, MapPin, RefreshCw } from 'lucide-react';
-import { cities } from '../carsData';
 import api from '../config/api';
+
+const DEFAULT_CITIES = ['Casablanca', 'Marrakech', 'Rabat', 'Tanger', 'Fès', 'Meknès'];
 
 function HeroSection({ onSearchSubmit }) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [availableCities, setAvailableCities] = useState(DEFAULT_CITIES);
   const [formData, setFormData] = useState({
-    city: cities[0],
+    city: DEFAULT_CITIES[0],
     carId: '',
     pickupDate: '',
     returnDate: ''
   });
 
   useEffect(() => {
+    const fetchSelectData = async () => {
+      try {
+        const { data } = await api.get('/destinations');
+        if (data.destinations && data.destinations.length > 0) {
+          const names = data.destinations.map(d => d.name);
+          setAvailableCities(names);
+          setFormData(prev => ({ ...prev, city: prev.city && names.includes(prev.city) ? prev.city : names[0] }));
+        }
+      } catch (e) {
+        console.error('Erreur chargement destinations:', e);
+      }
+    };
+    fetchSelectData();
+  }, []);
+
+  useEffect(() => {
     const fetchCars = async () => {
       try {
-        const { data } = await api.get('/cars');
+        setLoading(true);
+        let url = '/cars';
+        if (formData.pickupDate && formData.returnDate) {
+          url += `?startDate=${formData.pickupDate}&endDate=${formData.returnDate}`;
+        }
+
+        const { data } = await api.get(url);
         const fetchedCars = data.cars || [];
         setCars(fetchedCars);
+
         if (fetchedCars.length > 0) {
-          setFormData(prev => ({ ...prev, carId: fetchedCars[0]._id }));
+          setFormData(prev => {
+            // Only update carId if the currently selected car is no longer available
+            if (!fetchedCars.find(c => c._id === prev.carId)) {
+              return { ...prev, carId: fetchedCars[0]._id };
+            }
+            return prev;
+          });
+        } else {
+          setFormData(prev => ({ ...prev, carId: '' }));
         }
       } catch (err) {
         console.error('Erreur lors du chargement des voitures:', err);
@@ -40,7 +73,7 @@ function HeroSection({ onSearchSubmit }) {
       }
     };
     fetchCars();
-  }, []);
+  }, [formData.pickupDate, formData.returnDate]);
 
   const handleFormChange = (e) => {
     setFormData({
@@ -102,10 +135,12 @@ function HeroSection({ onSearchSubmit }) {
                   name="city"
                   value={formData.city}
                   onChange={handleFormChange}
-                  className="w-full pl-10 pr-4 py-2.5 text-sm md:text-base border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 appearance-none bg-gray-50 text-gray-800 font-medium transition-colors hover:bg-white"
+                  className="w-full bg-transparent border-none text-white focus:ring-0 cursor-pointer appearance-none outline-none font-medium"
                 >
-                  {cities.map(city => (
-                    <option key={city} value={city}>{city}</option>
+                  {availableCities.map((city) => (
+                    <option key={city} value={city} className="bg-gray-900 text-white">
+                      {city}
+                    </option>
                   ))}
                 </select>
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-red-500">
