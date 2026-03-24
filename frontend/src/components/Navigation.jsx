@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Phone, Menu, X, LogOut, LayoutDashboard, CalendarDays, LogIn, UserPlus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-function Navigation({ onOpenModal, onNavigate }) {
+function Navigation({ onReserve, onNavigate }) {
   const { user, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -17,6 +17,7 @@ function Navigation({ onOpenModal, onNavigate }) {
     { href: '#flotte', label: 'Flotte' },
     { href: '#destinations', label: 'Destinations' },
     { href: '#services', label: 'Services' },
+    { href: '#tarifs', label: 'Tarifs' },
     { href: '#contact', label: 'Contact' },
   ];
 
@@ -81,7 +82,7 @@ function Navigation({ onOpenModal, onNavigate }) {
                 <LogIn size={15} /> Connexion
               </button>
               <button
-                onClick={() => { if (onOpenModal) onOpenModal(); else onNavigate('login'); }}
+                onClick={() => { if (onReserve) onReserve(); else onNavigate('login'); }}
                 className="bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 text-sm rounded-lg transition-all hover:shadow-lg hover:-translate-y-0.5"
               >
                 Réserver

@@ -6,6 +6,7 @@ import FleetSection from './components/FleetSection';
 import DestinationsSection from './components/DestinationsSection';
 import StatsSection from './components/StatsSection';
 import ServicesSection from './components/ServicesSection';
+import PricingSection from './components/PricingSection';
 import ReviewsSection from './components/ReviewsSection';
 import AboutSection from './components/AboutSection';
 import ContactSection from './components/ContactSection';
@@ -24,6 +25,7 @@ function AppContent() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCarName, setSelectedCarName] = useState('');
   const [searchData, setSearchData] = useState(null);
+  const [pendingReservation, setPendingReservation] = useState(null);
 
   // Sync view with user role on login/logout
   useEffect(() => {
@@ -32,26 +34,49 @@ function AppContent() {
     }
   }, [user, view]);
 
+  // Handle post-login redirection for pending reservations
+  useEffect(() => {
+    if (user && pendingReservation && view !== 'reservation') {
+      setSearchData(pendingReservation);
+      setView('reservation');
+      setPendingReservation(null);
+    }
+  }, [user, pendingReservation, view]);
+
   const handleOpenModal = (carName = '') => {
     setSelectedCarName(carName);
     setIsModalOpen(true);
   };
 
   const handleReserveClick = (carId) => {
-    setSearchData({
+    const data = {
       carId,
       city: 'Casablanca',
       pickupDate: '',
       returnDate: ''
-    });
-    setView('reservation');
-    window.scrollTo(0, 0);
+    };
+    
+    if (!user) {
+      setPendingReservation(data);
+      setView('login');
+      window.scrollTo(0, 0);
+    } else {
+      setSearchData(data);
+      setView('reservation');
+      window.scrollTo(0, 0);
+    }
   };
 
   const handleSearchSubmit = (data) => {
-    setSearchData(data);
-    setView('reservation');
-    window.scrollTo(0, 0);
+    if (!user) {
+      setPendingReservation(data);
+      setView('login');
+      window.scrollTo(0, 0);
+    } else {
+      setSearchData(data);
+      setView('reservation');
+      window.scrollTo(0, 0);
+    }
   };
 
   const handleNavigate = (newView) => {
@@ -99,7 +124,7 @@ function AppContent() {
   // 5. Default: Home Page
   return (
     <div className="bg-gray-900 text-white min-h-screen overflow-x-hidden">
-      <Navigation onOpenModal={handleOpenModal} onNavigate={handleNavigate} />
+      <Navigation onReserve={() => handleReserveClick('')} onNavigate={handleNavigate} />
       
       <main>
         <HeroSection onSearchSubmit={handleSearchSubmit} />
@@ -107,6 +132,7 @@ function AppContent() {
         <DestinationsSection />
         <StatsSection />
         <ServicesSection />
+        <PricingSection onReserve={handleReserveClick} />
         <ReviewsSection />
         <AboutSection />
         <ContactSection />

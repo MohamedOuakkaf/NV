@@ -4,34 +4,32 @@ function DestinationsSection() {
   const destinations = [
     {
       name: 'Casablanca',
-      desc: 'Cœur économique vibrant, célèbre pour la majestueuse Mosquée Hassan II et son architecture Art Déco.',
+      desc: 'Cœur économique vibrant du Maroc, célèbre pour la majestueuse Mosquée Hassan II érigée sur l\'océan et son fascinant héritage architectural Art Déco qui se mêle à la modernité.',
       image: 'https://images.unsplash.com/photo-1539020140153-e479b8c22e70?auto=format&fit=crop&q=80&w=800'
     },
     {
       name: 'Marrakech',
-      desc: 'La Ville Ocre, joyau historique abritant la célèbre place Jemaa el-Fna et la mosquée Koutoubia.',
+      desc: 'La Ville Ocre, véritable joyau historique abritant la célèbre place frénétique Jemaa el-Fna, la majestueuse mosquée Koutoubia et ses somptueux jardins luxuriants.',
       image: 'https://images.unsplash.com/photo-1597212618440-806262de4f6b?auto=format&fit=crop&q=80&w=800'
     },
     {
       name: 'Rabat',
-      desc: 'Capitale impériale majestueuse, reconnue pour la Tour Hassan et l\'historique Kasbah des Oudayas.',
+      desc: 'Capitale impériale majestueuse et paisible, reconnue pour l\'imposante Tour Hassan, le somptueux Mausolée et l\'historique Kasbah des Oudayas surplombant l\'Atlantique.',
       image: 'https://images.trvl-media.com/place/6114800/9cbd00f1-c248-4ce6-936d-5698f58a1cb5.jpg'
     },
     {
       name: 'Tanger',
-      desc: 'La perle du Nord à la croisée des mondes, offrant ses grottes d\'Hercule et sa médina envoûtante.',
+      desc: 'La perle du Nord à la croisée des mondes, offrant ses mythiques grottes d\'Hercule, son port authentique et sa médina envoûtante face au détroit de Gibraltar.',
       image: 'https://upload.wikimedia.org/wikipedia/commons/a/a1/Cuevas_de_H%C3%A9rcules%2C_Cabo_Espartel%2C_Marruecos%2C_2015-12-11%2C_DD_22-24_HDR.JPG'
     },
     {
-      //ddsd
-      //EEED
       name: 'Fès',
-      desc: 'Capitale spirituelle du royaume, réputée pour sa medina millénaire et la majestueuse porte Bab Boujloud.',
+      desc: 'Capitale spirituelle et culturelle du royaume, réputée mondialement pour sa médina millénaire labyrinthique, ses tanneries et la majestueuse porte Bab Boujloud.',
       image: 'https://www.lavieeco.com/wp-content/uploads/2021/11/P20-2-2048x1479.jpg'
     },
     {
       name: 'Meknès',
-      desc: 'L\'ancienne cité impériale ismaélienne, célèbre pour l\'imposante porte Bab Mansour et ses écuries.',
+      desc: 'L\'ancienne cité impériale ismaélienne, célèbre pour ses hautes murailles protectrices, l\'imposante porte Bab Mansour et ses vastes écuries royales chargées d\'histoire.',
       image: 'https://www.fez-guide.com/wp-content/uploads/2016/09/bab-mansour-meknes-1920.jpg'
     }
   ];
@@ -59,9 +57,9 @@ function DestinationsSection() {
               <div className="relative z-10 h-full flex flex-col justify-end p-6">
                 <h3 className="text-2xl font-bold text-white mb-2 font-playfair">{destination.name}</h3>
                 <p className="text-gray-200 text-sm mb-4">{destination.desc}</p>
-                <button className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded text-sm w-fit transition-all transform hover:-translate-y-1">
-                  Louer une voiture
-                </button>
+                <div className="flex items-center text-red-500 font-semibold text-sm group-hover:text-red-400 transition-colors uppercase tracking-wider">
+                  Louer une voiture <span className="ml-2 transform group-hover:translate-x-2 transition-transform duration-300">→</span>
+                </div>
               </div>
             </div>
           ))}
